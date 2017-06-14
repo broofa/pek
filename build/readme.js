@@ -22,7 +22,7 @@ JS data structures... with one important difference:
 
 ***You can listen for changes.***
 
-Read on for a quick overview of how this works, or check out the [React example](react-example/src/App.js)
+Read on for a quick overview of how this works, or check out the [React example](react-example)
 
 ### Browser Support
 
