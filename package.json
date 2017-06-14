@@ -1,0 +1,20 @@
+{
+  "name": "pek",
+  "version": "0.0.1",
+  "description": "A modern data model for UI rendering",
+  "license": "MIT",
+  "homepage": "https://github.com/broofa/pek",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/broofa/pek.git"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "mocha": "latest"
+  },
+  "scripts": {
+    "prepublish": "node build/readme.js",
+    "test": "mocha test"
+  }
+}
