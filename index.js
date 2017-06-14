@@ -1,59 +1,5 @@
 const assert = require('assert');
-
-function pathSplit(path) {
-  return (typeof(path) == 'string') ? path.split('.') : path;
-}
-
-function pathMatch(pattern, path) {
-  if (path.length != pattern.length) return;
-  for (let i = 0, l = path.length; i < l; i++) {
-    if (pattern[i] != '*' && pattern[i] != path[i]) return false;
-  }
-  return true;
-}
-
-class PathEmitter {
-  constructor() {
-    this.listeners = [];
-  }
-
-  on(...args) {
-    let listeners = [];
-    while (args.length) {
-      let path = args.shift();
-      const callback = args.shift();
-
-      if (path.$isProxy) {
-        path = path.$path.concat('*');
-      } else {
-        path = pathSplit(path);
-      }
-      const listener = [path, callback];
-      listeners.push(listener);
-      this.listeners.push(listener);
-    }
-
-    // Return a function to unsubscribe
-    return function off() {
-      if (listeners) listeners.forEach(listener => listener[1] = null);
-      listeners = null;
-    }
-  }
-
-  emit(path, ...args) {
-    let j = 0;
-    for (let i = 0; i < this.listeners.length; i++) {
-      const [pattern, callback] = this.listeners[i];
-      if (!callback) continue;
-
-      this.listeners[j++] = this.listeners[i];
-      if (pathMatch(pattern, path)) {
-        callback(path, ...args);
-      }
-    }
-    this.listeners.length = j;
-  }
-}
+const PathEmitter = require('./PathEmitter');
 
 class Pek extends PathEmitter {
   constructor(root) {
@@ -102,7 +48,7 @@ class Pek extends PathEmitter {
     }
 
     proxify = function(val, path = []) {
-      path = pathSplit(path);
+      path = PathEmitter.pathSplit(path);
 
       if (val && Array.isArray(val)) {
         for (var i = 0, l = val.length; i < l; i++)

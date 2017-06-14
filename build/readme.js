@@ -9,18 +9,19 @@ const ReadmeGen = require('./ReadmeGen');
 (`
 ![Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
 
-A modern data model for UI rendering
+An elegant, modern, observable, data model
 
 ## About
 
 1. It's pronounced "peek"
 2. It's spelled "Pｅk".  Only pretentious jerks spell it "P&emacr;k".
 
-Pek is a model for rendering data-backed UI, much like Backbone or Redux... but
-simpler. Much simpler.  Pek data models look and feel exactly like regular
-JS data structures... with one important difference:
+Pek is an observable data model in a similar vein in spirit to Backbone, Redux,
+and other frameworks of that ilk... but simpler. Much simpler.  Pek models
+looks and behaves just like regular JavaScript data structures... with one
+important difference:
 
-***You can listen for changes.***
+***Pek models are observable***
 
 Read on for a quick overview of how this works, or check out the [React example](react-example)
 
@@ -28,8 +29,9 @@ Read on for a quick overview of how this works, or check out the [React example]
 
 Pek is powered by the [ES6 Proxy
 API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
-, so don't even think about asking if it works for legacy browsers.  It
-doesn't.  That's the bad news.  The good news is that for most modern desktop and mobile browsers, Pek works just fine.
+, so don't even think about asking if it works for legacy browsers.  It doesn't.
+That's the bad news.  The good news is that for most modern desktop and mobile
+browsers, Pek works just fine.
 
 ## Getting Started
 ### Install
