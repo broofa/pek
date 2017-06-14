@@ -7,10 +7,9 @@ An elegant, modern, observable, data model
 1. It's pronounced "peek"
 2. It's spelled "Pｅk".  Only pretentious jerks spell it "P&emacr;k".
 
-P&emacr;k is an observable data model in a similar vein in spirit to Backbone, Redux,
-and other frameworks of that ilk... but simpler. Much simpler.  P&emacr;k models
-looks and behaves just like regular JavaScript data structures... with one
-important difference:
+P&emacr;k is an observable data model similar in spirit to Backbone or Redux, but
+simpler. Much simpler.  P&emacr;k models looks and behaves just like regular
+JavaScript data structures... with one important difference:
 
 ***P&emacr;k models are observable***
 
