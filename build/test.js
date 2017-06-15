@@ -67,6 +67,19 @@ describe('main test', function() {
     done();
   });
 
+  it('Proxy behavior', function(done) {
+    const pek = start([]);
+
+    model.$isProxy = false;
+    assert(model.$isProxy, '$isProxy should not be settable');
+
+    assert(!('$isProxy' in model), '$isProxy "in" model');
+
+    assert.deepEqual(Object.keys(model), [], 'Empty model has keys');
+
+    done();
+  });
+
   it('Array root', function(done) {
     const pek = start([]);
 

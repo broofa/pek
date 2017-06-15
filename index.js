@@ -19,6 +19,8 @@ class Pek extends PathEmitter {
         if (k === '$path') {
           this.path = v;
           return true;
+        } else if (k === '$isProxy') {
+          return true;
         }
 
         const path = this.path.concat(k);
