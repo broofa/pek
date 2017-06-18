@@ -1,5 +1,31 @@
 const assert = require('assert');
 const Pek = require('../index');
+const PathEmitter = require('../PathEmitter');
+
+describe('PathEmitter', function() {
+  function test(pattern, path, expect) {
+    it(`pathMatch([${pattern}], [${path}]) == ${expect}`, function() {
+      assert.equal(PathEmitter.pathMatch(pattern, path), expect);
+    });
+  }
+
+  test([1], [1], true);
+  test(['*'], [1], true);
+  test([1, 2, 3], [1, 2, 3], true);
+  test([1, '*', 3], [1, 2, 3], true);
+  test([1, '*', 3, '*', 5], [1, 2, 3, 4, 5], true);
+  test([1, '*', 3, '*', 5], [1, 2, 3, 4, 5], true);
+
+  test([1, '**', 3], [1, 2, 3], true);
+  test([1, '**', 5], [1, 2, 3, 4, 5], true);
+
+  test([], [], false);
+  test([], [1], false);
+  test([1], [], false);
+  test([1], [2], false);
+  test([1, 2], [1, 2, 3], false);
+  test([1, 2, 3], [1, 2], false);
+});
 
 describe('main test', function() {
   /**

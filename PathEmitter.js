@@ -6,11 +6,36 @@ class PathEmitter {
   }
 
   static pathMatch(pattern, path) {
-    if (path.length != pattern.length) return;
-    for (let i = 0, l = path.length; i < l; i++) {
-      if (pattern[i] != '*' && pattern[i] != path[i]) return false;
+    if (!pattern || !pattern.length) return false;
+//console.log(pattern, path);
+    // Current algorithm is an "outside-in" approach.  We do head and tail
+    // pattern matches (permitting '*' wildcard).  If/when there's a mismatch in
+    // the middle, we only allow it if it's the globstar ('**')
+    const pathl = path.length, patl = pattern.length;
+
+    // Head match
+    let headi = 0;
+    while (true) {
+      const pat = pattern[headi];
+//console.log('>', headi, pattern[headi], path[headi]);
+      if (headi >= patl-1 || pat != '*' && pat != path[headi]) break;
+      headi++;
     }
-    return true;
+
+    // Tail match
+    let taili = pathl - 1, pati = patl - 1;
+    while (true) {
+//console.log('<', taili, pattern[pati], path[taili])
+      const pat = pattern[pati];
+      if (taili <= headi || pat != '*' && pat != path[taili]) break;
+      pati--;
+      taili--;
+    }
+
+//console.log(pattern, path, headi, taili, pattern[headi]);
+    const pat = pattern[headi];
+    if (pat == '**') return true;
+    return taili == headi && (pat == path[headi] || pat == '*');
   }
 
   constructor() {
