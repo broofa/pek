@@ -5,6 +5,10 @@ import './App.css';
 import Pek from 'pek'
 
 let id = 0;
+
+// Our Pek model
+// (we make it global here for debugging purposes.  This is neither needed nor
+// recommended in practice.)
 const pek = global.pek = new Pek({
   lists: [
     {
