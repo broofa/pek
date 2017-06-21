@@ -1,19 +1,23 @@
+# BLARG
+
 ```javascript --hide
 // `runmd` hook to add accent to "Pek" spelling
 setLineTransformer((line, isRunning) => {
   if (!isRunning) {
-    return line.replace(/(.?)Pek/g, (a,b) => b == '\\' ? 'Pek' : b + 'P&emacr;k');
+    line = line.replace(/(.?)Pek/g, (a,b) => b == '\\' ? 'Pek' : b + 'P&emacr;k');
   }
+  return line;
 });
 ```
-![Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
 
-An elegant, modern, observable, data model
+![\Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
+
+An elegant, modern, observable, data model for JavaScript
 
 ## About
 
 1. It's pronounced "peek"
-2. It's spelled "\Pek", not "Pek" (unless you're a pretentious like the author &#x263A;)
+2. It's spelled "\Pek", not "Pek" (unless you're a pretentious twat like the author &#x263A;)
 
 Pek is an observable data model similar in spirit to Backbone or Redux, but
 simpler. Much simpler.  Pek models look and behave just like regular
@@ -25,11 +29,10 @@ Read on for a quick overview of how this works, or check out the [React example]
 
 ### Browser Support
 
-Pek is powered by the [ES6 Proxy
-API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
-, so don't even think about asking if it works for legacy browsers.  It doesn't.
-That's the bad news.  The good news is that for most modern desktop and mobile
-browsers, Pek works just fine.
+Pek uses ES6 APIs, particularly the [ES6 Proxy
+API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
+It runs on most modern mobile and desktop JS platforms (latest versions of
+Node/Chrome/Firefox/Safari/Edge, etc.)
 
 ## Getting Started
 ### Install

@@ -1,11 +1,14 @@
-![P&emacr;k Logo](http://i.imgur.com/4ZQuhmQ.png)
+# BLARG
 
-An elegant, modern, observable, data model
+
+![Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
+
+An elegant, modern, observable, data model for JavaScript
 
 ## About
 
 1. It's pronounced "peek"
-2. It's spelled "Pek", not "P&emacr;k" (unless you're a pretentious like the author &#x263A;)
+2. It's spelled "Pek", not "P&emacr;k" (unless you're a pretentious twat like the author &#x263A;)
 
 P&emacr;k is an observable data model similar in spirit to Backbone or Redux, but
 simpler. Much simpler.  P&emacr;k models look and behave just like regular
@@ -17,11 +20,10 @@ Read on for a quick overview of how this works, or check out the [React example]
 
 ### Browser Support
 
-P&emacr;k is powered by the [ES6 Proxy
-API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
-, so don't even think about asking if it works for legacy browsers.  It doesn't.
-That's the bad news.  The good news is that for most modern desktop and mobile
-browsers, P&emacr;k works just fine.
+P&emacr;k uses ES6 APIs, particularly the [ES6 Proxy
+API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
+It runs on most modern mobile and desktop JS platforms (latest versions of
+Node/Chrome/Firefox/Safari/Edge, etc.)
 
 ## Getting Started
 ### Install
@@ -37,6 +39,32 @@ browsers, P&emacr;k works just fine.
 ### Create a P&emacr;k Model
 
 By way of example, let's create a P&emacr;k model for a simple todo list app:
+```javascript
+const Pek = require('./index.js');
+
+const APP_DATA = {
+  appName: 'Example App',
+  lists: [
+    {
+      name: 'Groceries',
+      items: [
+        {name: 'Milk', done: false},
+        {name: 'Eggs', done: false},
+        {name: 'Bacon', done: true},
+      ]
+    },
+    {
+      name: 'Chores',
+      items: [
+        {name: 'Laundry', done: false},
+        {name: 'Weed garden', done: true},
+      ]
+    }
+  ]
+};
+
+const pek = new Pek(APP_DATA);
+console.log(pek);
 
 ⇒ Pek {
 ⇒   listeners: [],
