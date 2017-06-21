@@ -55,7 +55,8 @@ class Pek extends PathEmitter {
       if (val && Array.isArray(val)) {
         for (var i = 0, l = val.length; i < l; i++)
           val[i] = proxify(val[i], path.concat(i));
-      } else if (val && val.constructor == Object) {
+      } else if (val && val.constructor && val.constructor.defineProperty) {
+				// The above test should only pass for plain JS objects
         for (const k  in val) val[k] = proxify(val[k], path.concat(k));
       } else {
         return val;

@@ -1,12 +1,11 @@
-/**
- * A cool(?) hack to generate the README.md file with actual code output
- */
-
-const path = require('path');
-const ReadmeGen = require('./ReadmeGen');
-
-// START
-(`
+```javascript --hide
+// `runmd` hook to add accent to "Pek" spelling
+setLineTransformer((line, isRunning) => {
+  if (!isRunning) {
+    return line.replace(/(.?)Pek/g, (a,b) => b == '\\' ? 'Pek' : b + 'P&emacr;k');
+  }
+});
+```
 ![Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
 
 An elegant, modern, observable, data model
@@ -14,10 +13,10 @@ An elegant, modern, observable, data model
 ## About
 
 1. It's pronounced "peek"
-2. It's spelled "Pｅk".  Only pretentious jerks spell it "P&emacr;k".
+2. It's spelled "\Pek", not "Pek" (unless you're a pretentious like the author &#x263A;)
 
 Pek is an observable data model similar in spirit to Backbone or Redux, but
-simpler. Much simpler.  Pek models looks and behaves just like regular
+simpler. Much simpler.  Pek models look and behave just like regular
 JavaScript data structures... with one important difference:
 
 ***Pek models are observable***
@@ -35,19 +34,19 @@ browsers, Pek works just fine.
 ## Getting Started
 ### Install
 
-\`npm install pek\`
+`npm install pek`
 
-\`import Pek from 'pek'\`
+`import \Pek from 'pek'`
 
 ... or ...
 
-\`const Pek = require('pek')\`
+`const \Pek = require('pek')`
 
 ### Create a Pek Model
 
 By way of example, let's create a Pek model for a simple todo list app:
-`)
-const Pek = require('../index');
+```javascript --context=main
+const Pek = require('./index.js');
 
 const APP_DATA = {
   appName: 'Example App',
@@ -71,18 +70,18 @@ const APP_DATA = {
 };
 
 const pek = new Pek(APP_DATA);
-(`
+console.log(pek);
+```
 ### Subscribing to Events
 
-Once we have our model, \`pek\`, we can now listen for changes.
+Once we have our model, `pek`, we can now listen for changes.
 
 For example, let's listen in on the top-level object:
-`)
-let off = pek.on('*', (path, val) => ReadmeGen.log(`Changed ${path[0]} to ${val}`));
+```javascript --context=main
+let off = pek.on('*', (path, val) => console.log(`Changed ${path[0]} to ${val}`));
 
 pek.model.appName = 'Pek is awesome!';
-ReadmeGen.dump();
-(`
+```
 *Did you see that?!?*
 
 Go back and take another look.   Notice that by simply assigning a property to
@@ -91,73 +90,59 @@ our model, we've triggered the listener function!
 The entire model works this way.
 
 BTW, Pek listener's are called with two arguments:
-  1. \`path\` - (Array[String]) Path to the property that changed
-  2. \`value\` - (any) New value of the property
+  1. `path` - (Array[String]) Path to the property that changed
+  2. `value` - (any) New value of the property
 
 ### Unsubscribing
 
-When you call \`Pek.on()\` to subscribe to an event, the return value is an unsubscriber function.  Simply call the function to unsubscribe your listener: (We'll do this after each of our examples to keep things from getting confusing)
-`)
+`pek.on()` returns unsubscriber function.  Simply call this function to remove your listener.
+(We'll be doing this after each of our examples here and below to keep things from getting confusing)
+```javascript --context=main
 off();
 
 pek.model.appName = 'Pek is still awesome!';
-ReadmeGen.dump();
-(`
+
+// (nothing logged)
+```
 Got it?  Okay, let's see what else we can do ...
 
 ### Subscribing to Events (Continued)
-Listen for \`name\` changes on any list:
-`)
-off = pek.on('lists.*.name', ReadmeGen.log);
-
+Listen for `name` changes on any list:
+```javascript --context=main
+off = pek.on('lists.*.name', console.log);
 pek.model.lists[1].name = 'Honey Do';
-ReadmeGen.dump();
-
 off();
-(`
+```
 Listen for changes to any property, on any item, in any list:
-`)
-off = pek.on('lists.*.items.*.*', ReadmeGen.log);
-
+```javascript --context=main
+off = pek.on('lists.*.items.*.*', console.log);
 pek.model.lists[1].items[1].name = 'Cook dinner';
-ReadmeGen.dump();
-
 pek.model.lists[0].items[0].done = true;
-ReadmeGen.dump();
-
 off();
-(`
+```
 Listen for changes on state before it exists(!):
-`)
-off = pek.on('users.*', ReadmeGen.log);
-
+```javascript --context=main
+off = pek.on('users.*', console.log);
 pek.model.users = [{email: 'ann@example.com'}];
-ReadmeGen.dump();
-
 pek.model.users.push({email: 'bob@example.com'});
-ReadmeGen.dump();
-
 off();
-(`
+```
 Subscribe to changes on specific objects:
-`)
-off = pek.on('lists.1.items.0.name', ReadmeGen.log);
+```javascript --context=main
+off = pek.on('lists.1.items.0.name', console.log);
 
 pek.model.lists[1].items[1].name = 'Dave';
-ReadmeGen.dump();
-
 pek.model.lists[1].items[0].name = 'Drew';
-ReadmeGen.dump();
 
 off();
-(`
+```
 ## Pek Paths
 
 Paths in Pek take two forms.  Both forms provide the keys needed to navigate to
 a particular point in the model.  In the string form, these keys are delimited
-with a ".".  The array form is simply the result of calling \`split('.')\` on the string form.
+with a ".".  The array form is simply the result of calling `split('.')` on the string form.
 
-Path patterns passed to \`Pek.on()\` may contain a "*" wildcard for any key, in
+Path patterns passed to `Pek.on()` may contain a `*` wildcard for any key, in
 which case the pattern will match paths with any key at that level.  You may
 also pass a model object, in which case Pek will use the current path at which that object resides.
 
@@ -168,17 +153,10 @@ Note: At this time, path keys may not contain a "." character.
 As alluded to in the Overview, Pek works by wrapping the model you pass into
 the constructor in ES6 Proxy objects.  What this means is that *you are reading and writing state in that model structure*.
 
-For example, if we look at our original model, \`APP_DATA\`, we'll see that it's been getting modified:
-`)
-ReadmeGen.log(APP_DATA.appName);
-ReadmeGen.dump();
-
-ReadmeGen.log(APP_DATA.users);
-ReadmeGen.dump();
-
-ReadmeGen.log(APP_DATA.lists[1].items[1].name);
-ReadmeGen.dump();
-(`
+For example, if we look at our original model, `APP_DATA`, we'll see that it's been getting modified:
+```javascript --context=main
+console.log(APP_DATA.appName);
+console.log(APP_DATA.users);
+console.log(APP_DATA.lists[1].items[1].name);
+```
 Note that Pek expects to "own" the model you give it.  Once you've created a Pek model you're free to pass around references to the model and any objects inside of it - Pek will happily emit events as you make changes.  However if you maintain a reference to the original model (outside of Pek) and operate on that, there are some cases where events will not be emitted.
-`)
-ReadmeGen.compile(__filename, path.join(__dirname, '../README.md'));

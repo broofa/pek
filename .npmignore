@@ -1,4 +1,5 @@
 build/
+src/
 react-example/
 package-lock.json
 node_modules

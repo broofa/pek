@@ -1,17 +1,7 @@
-node_modules
-
-# ESLint cruft
-.eslintcache
-
-# NPM cruft
-npm-debug.log
-
-# VIM temp files
 *.sw*
-
-#misc temp files
-bash.exe.stackdump
-npm-debug.*
-
-# Mac desktop services store
 .DS_Store
+.eslintcache
+bash.exe.stackdump
+node_modules
+npm-debug.*
+package-lock.json
