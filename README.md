@@ -1,5 +1,3 @@
-# BLARG
-
 
 ![Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
 
@@ -7,7 +5,7 @@ An elegant, modern, observable, data model for JavaScript
 
 ## About
 
-1. It's pronounced "peek"
+It's pronounced "peek", but spelled "\pek"
 2. It's spelled "Pek", not "P&emacr;k" (unless you're a pretentious twat like the author &#x263A;)
 
 P&emacr;k is an observable data model similar in spirit to Backbone or Redux, but
@@ -20,8 +18,8 @@ Read on for a quick overview of how this works, or check out the [React example]
 
 ### Browser Support
 
-P&emacr;k uses ES6 APIs, particularly the [ES6 Proxy
-API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
+P&emacr;k relies on the [ES6 Proxy
+API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) API. Thus, no real attempt has been made to support legacy systems.
 It runs on most modern mobile and desktop JS platforms (latest versions of
 Node/Chrome/Firefox/Safari/Edge, etc.)
 
@@ -40,7 +38,7 @@ Node/Chrome/Firefox/Safari/Edge, etc.)
 
 By way of example, let's create a P&emacr;k model for a simple todo list app:
 ```javascript
-const Pek = require('./index.js');
+const Pek = require('../index.js');
 
 const APP_DATA = {
   appName: 'Example App',
@@ -64,17 +62,16 @@ const APP_DATA = {
 };
 
 const pek = new Pek(APP_DATA);
-console.log(pek);
 
-⇒ Pek {
-⇒   listeners: [],
-⇒   model: { appName: 'Example App', lists: [ [Object], [Object] ] } }
+pek; // ⇨ Pek { _listeners: [], model: { appName: 'Example App', lists: [ [Object], [Object] ] } }
+
 ```
 ### Subscribing to Events
 
 Once we have our model, `pek`, we can now listen for changes.
 
 For example, let's listen in on the top-level object:
+
 ```javascript
 let off = pek.on('*', (path, val) => console.log(`Changed ${path[0]} to ${val}`));
 
@@ -95,7 +92,9 @@ BTW, Pek listener's are called with two arguments:
 
 ### Unsubscribing
 
-`pek.on()` returns unsubscriber function.  Simply call this function to remove your listener.
+
+
+`pek.on()` returns an unsubscriber function.  Simply call this function to remove your listener.
 (We'll be doing this after each of our examples here and below to keep things from getting confusing)
 ```javascript
 off();
@@ -177,4 +176,4 @@ console.log(APP_DATA.lists[1].items[1].name);
 Note that Pek expects to "own" the model you give it.  Once you've created a Pek model you're free to pass around references to the model and any objects inside of it - Pek will happily emit events as you make changes.  However if you maintain a reference to the original model (outside of Pek) and operate on that, there are some cases where events will not be emitted.
 
 ----
-Page rendered from [src/README_js.md](src/README_js.md) by [![RunMD Logo](http://i.imgur.com/h0FVyzU.png)](https://github.com/broofa/runmd)
+Markdown generated from [src/README_js.md](src/README_js.md) by [![RunMD Logo](http://i.imgur.com/h0FVyzU.png)](https://github.com/broofa/runmd)

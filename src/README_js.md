@@ -1,11 +1,7 @@
-# BLARG
-
 ```javascript --hide
 // `runmd` hook to add accent to "Pek" spelling
 setLineTransformer((line, isRunning) => {
-  if (!isRunning) {
-    line = line.replace(/(.?)Pek/g, (a,b) => b == '\\' ? 'Pek' : b + 'P&emacr;k');
-  }
+  if (!isRunning) line = line.replace(/(^|.?)Pek/g, (a,b) => b == '\\' ? 'Pek' : b + 'P&emacr;k');
   return line;
 });
 ```
@@ -16,7 +12,7 @@ An elegant, modern, observable, data model for JavaScript
 
 ## About
 
-1. It's pronounced "peek"
+It's pronounced "peek", but spelled "\pek"
 2. It's spelled "\Pek", not "Pek" (unless you're a pretentious twat like the author &#x263A;)
 
 Pek is an observable data model similar in spirit to Backbone or Redux, but
@@ -29,8 +25,8 @@ Read on for a quick overview of how this works, or check out the [React example]
 
 ### Browser Support
 
-Pek uses ES6 APIs, particularly the [ES6 Proxy
-API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
+Pek relies on the [ES6 Proxy
+API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) API. Thus, no real attempt has been made to support legacy systems.
 It runs on most modern mobile and desktop JS platforms (latest versions of
 Node/Chrome/Firefox/Safari/Edge, etc.)
 
@@ -48,8 +44,8 @@ Node/Chrome/Firefox/Safari/Edge, etc.)
 ### Create a Pek Model
 
 By way of example, let's create a Pek model for a simple todo list app:
-```javascript --context=main
-const Pek = require('./index.js');
+```javascript --context
+const Pek = require('../index.js');
 
 const APP_DATA = {
   appName: 'Example App',
@@ -73,14 +69,16 @@ const APP_DATA = {
 };
 
 const pek = new Pek(APP_DATA);
-console.log(pek);
+
+pek; // RESULT
 ```
 ### Subscribing to Events
 
 Once we have our model, `pek`, we can now listen for changes.
 
 For example, let's listen in on the top-level object:
-```javascript --context=main
+
+```javascript --context
 let off = pek.on('*', (path, val) => console.log(`Changed ${path[0]} to ${val}`));
 
 pek.model.appName = 'Pek is awesome!';
@@ -98,9 +96,11 @@ BTW, Pek listener's are called with two arguments:
 
 ### Unsubscribing
 
-`pek.on()` returns unsubscriber function.  Simply call this function to remove your listener.
+
+
+`pek.on()` returns an unsubscriber function.  Simply call this function to remove your listener.
 (We'll be doing this after each of our examples here and below to keep things from getting confusing)
-```javascript --context=main
+```javascript --context
 off();
 
 pek.model.appName = 'Pek is still awesome!';
@@ -111,27 +111,27 @@ Got it?  Okay, let's see what else we can do ...
 
 ### Subscribing to Events (Continued)
 Listen for `name` changes on any list:
-```javascript --context=main
+```javascript --context
 off = pek.on('lists.*.name', console.log);
 pek.model.lists[1].name = 'Honey Do';
 off();
 ```
 Listen for changes to any property, on any item, in any list:
-```javascript --context=main
+```javascript --context
 off = pek.on('lists.*.items.*.*', console.log);
 pek.model.lists[1].items[1].name = 'Cook dinner';
 pek.model.lists[0].items[0].done = true;
 off();
 ```
 Listen for changes on state before it exists(!):
-```javascript --context=main
+```javascript --context
 off = pek.on('users.*', console.log);
 pek.model.users = [{email: 'ann@example.com'}];
 pek.model.users.push({email: 'bob@example.com'});
 off();
 ```
 Subscribe to changes on specific objects:
-```javascript --context=main
+```javascript --context
 off = pek.on('lists.1.items.0.name', console.log);
 
 pek.model.lists[1].items[1].name = 'Dave';
@@ -157,7 +157,7 @@ As alluded to in the Overview, Pek works by wrapping the model you pass into
 the constructor in ES6 Proxy objects.  What this means is that *you are reading and writing state in that model structure*.
 
 For example, if we look at our original model, `APP_DATA`, we'll see that it's been getting modified:
-```javascript --context=main
+```javascript --context
 console.log(APP_DATA.appName);
 console.log(APP_DATA.users);
 console.log(APP_DATA.lists[1].items[1].name);

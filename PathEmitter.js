@@ -7,7 +7,6 @@ class PathEmitter {
 
   static pathMatch(pattern, path) {
     if (!pattern || !pattern.length) return false;
-//console.log(pattern, path);
     // Current algorithm is an "outside-in" approach.  We do head and tail
     // pattern matches (permitting '*' wildcard).  If/when there's a mismatch in
     // the middle, we only allow it if it's the globstar ('**')
@@ -17,7 +16,6 @@ class PathEmitter {
     let headi = 0;
     while (true) {
       const pat = pattern[headi];
-//console.log('>', headi, pattern[headi], path[headi]);
       if (headi >= patl-1 || pat != '*' && pat != path[headi]) break;
       headi++;
     }
@@ -25,21 +23,19 @@ class PathEmitter {
     // Tail match
     let taili = pathl - 1, pati = patl - 1;
     while (true) {
-//console.log('<', taili, pattern[pati], path[taili])
       const pat = pattern[pati];
       if (taili <= headi || pat != '*' && pat != path[taili]) break;
       pati--;
       taili--;
     }
 
-//console.log(pattern, path, headi, taili, pattern[headi]);
     const pat = pattern[headi];
     if (pat == '**') return true;
     return taili == headi && (pat == path[headi] || pat == '*');
   }
 
   constructor() {
-    this.listeners = [];
+    this._listeners = [];
   }
 
   on(...args) {
@@ -55,7 +51,7 @@ class PathEmitter {
       }
       const listener = [path, callback];
       listeners.push(listener);
-      this.listeners.push(listener);
+      this._listeners.push(listener);
     }
 
     // Return a function to unsubscribe
@@ -67,16 +63,16 @@ class PathEmitter {
 
   emit(path, ...args) {
     let j = 0;
-    for (let i = 0; i < this.listeners.length; i++) {
-      const [pattern, callback] = this.listeners[i];
+    for (let i = 0; i < this._listeners.length; i++) {
+      const [pattern, callback] = this._listeners[i];
       if (!callback) continue;
 
-      this.listeners[j++] = this.listeners[i];
+      this._listeners[j++] = this._listeners[i];
       if (PathEmitter.pathMatch(pattern, path)) {
         callback(path, ...args);
       }
     }
-    this.listeners.length = j;
+    this._listeners.length = j;
   }
 }
 

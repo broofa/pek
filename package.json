@@ -18,6 +18,7 @@
     "runmd": "0.1.3"
   },
   "scripts": {
+    "md": "runmd --watch --output README.md src/README_js.md",
     "prepare": "runmd src/README_js.md --output README.md",
     "test": "mocha src/test"
   }
