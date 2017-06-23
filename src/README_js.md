@@ -1,9 +1,8 @@
 ```javascript --hide
-// `runmd` hook to add accent to "Pek" spelling
-setLineTransformer((line, isRunning) => {
+runmd.onOutputLine = (line, isRunning) => {
   if (!isRunning) line = line.replace(/(^|.?)Pek/g, (a,b) => b == '\\' ? 'Pek' : b + 'P&emacr;k');
   return line;
-});
+};
 ```
 
 ![\Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
@@ -145,7 +144,7 @@ Paths in Pek take two forms.  Both forms provide the keys needed to navigate to
 a particular point in the model.  In the string form, these keys are delimited
 with a ".".  The array form is simply the result of calling `split('.')` on the string form.
 
-Path patterns passed to `Pek.on()` may contain a `*` wildcard for any key, in
+Path patterns passed to `\Pek.on()` may contain a `*` wildcard for any key, in
 which case the pattern will match paths with any key at that level.  You may
 also pass a model object, in which case Pek will use the current path at which that object resides.
 

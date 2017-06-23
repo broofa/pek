@@ -86,7 +86,7 @@ our model, we've triggered the listener function!
 
 The entire model works this way.
 
-BTW, Pek listener's are called with two arguments:
+BTW, P&emacr;k listener's are called with two arguments:
   1. `path` - (Array[String]) Path to the property that changed
   2. `value` - (any) New value of the property
 
@@ -146,21 +146,21 @@ off();
 
 ⇒ [ 'lists', 1, 'items', 0, 'name' ] Drew
 ```
-## Pek Paths
+## P&emacr;k Paths
 
-Paths in Pek take two forms.  Both forms provide the keys needed to navigate to
+Paths in P&emacr;k take two forms.  Both forms provide the keys needed to navigate to
 a particular point in the model.  In the string form, these keys are delimited
 with a ".".  The array form is simply the result of calling `split('.')` on the string form.
 
 Path patterns passed to `Pek.on()` may contain a `*` wildcard for any key, in
 which case the pattern will match paths with any key at that level.  You may
-also pass a model object, in which case Pek will use the current path at which that object resides.
+also pass a model object, in which case P&emacr;k will use the current path at which that object resides.
 
 Note: At this time, path keys may not contain a "." character.
 
-## A Word About Pek Models
+## A Word About P&emacr;k Models
 
-As alluded to in the Overview, Pek works by wrapping the model you pass into
+As alluded to in the Overview, P&emacr;k works by wrapping the model you pass into
 the constructor in ES6 Proxy objects.  What this means is that *you are reading and writing state in that model structure*.
 
 For example, if we look at our original model, `APP_DATA`, we'll see that it's been getting modified:
@@ -173,7 +173,7 @@ console.log(APP_DATA.lists[1].items[1].name);
 ⇒ [ { email: 'ann@example.com' }, { email: 'bob@example.com' } ]
 ⇒ Dave
 ```
-Note that Pek expects to "own" the model you give it.  Once you've created a Pek model you're free to pass around references to the model and any objects inside of it - Pek will happily emit events as you make changes.  However if you maintain a reference to the original model (outside of Pek) and operate on that, there are some cases where events will not be emitted.
+Note that P&emacr;k expects to "own" the model you give it.  Once you've created a P&emacr;k model you're free to pass around references to the model and any objects inside of it - P&emacr;k will happily emit events as you make changes.  However if you maintain a reference to the original model (outside of P&emacr;k) and operate on that, there are some cases where events will not be emitted.
 
 ----
 Markdown generated from [src/README_js.md](src/README_js.md) by [![RunMD Logo](http://i.imgur.com/h0FVyzU.png)](https://github.com/broofa/runmd)
