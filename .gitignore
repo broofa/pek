@@ -4,4 +4,3 @@
 bash.exe.stackdump
 node_modules
 npm-debug.*
-package-lock.json
