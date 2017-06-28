@@ -11,8 +11,7 @@ An elegant, modern, observable, data model for JavaScript
 
 ## About
 
-It's pronounced "peek", but spelled "\pek"
-2. It's spelled "\Pek", not "Pek" (unless you're a pretentious twat like the author &#x263A;)
+*Pronounced "peek", spelled "\Pek" (no accent, unless you feel like putting on airs).*
 
 Pek is an observable data model similar in spirit to Backbone or Redux, but
 simpler. Much simpler.  Pek models look and behave just like regular
@@ -78,27 +77,61 @@ Once we have our model, `pek`, we can now listen for changes.
 For example, let's listen in on the top-level object:
 
 ```javascript --context
-let off = pek.on('*', (path, val) => console.log(`Changed ${path[0]} to ${val}`));
+let off = pek.on('appName', (path, val) => console.log(`Changed ${path[0]} to ${val}`));
 
 pek.model.appName = 'Pek is awesome!';
 ```
-*Did you see that?!?*
 
-Go back and take another look.   Notice that by simply assigning a property to
-our model, we've triggered the listener function!
+*See that?!?*  Our listener function was called by simply assigning a value in our model!  The entire model works this way.
 
-The entire model works this way.
+Let's try something a bit fancier - listening for a `name` changes on any
+list:
 
-BTW, Pek listener's are called with two arguments:
+```javascript --context
+off = pek.on('lists.*.name', console.log);
+
+pek.model.lists[1].name = 'Honey Do';
+
+off();
+```
+
+*Cool, right?*  We can listen for property changes anywhere withour model.
+
+### Listener functions
+
+Pek listener's are called with two arguments:
+
   1. `path` - (Array[String]) Path to the property that changed
   2. `value` - (any) New value of the property
 
-### Unsubscribing
+Going one step further, we can listen for `name` change
 
+### Pek Paths & Patterns
 
+In Pek, a "path" is how a particular property in your model is identified. Each
+component of the path identifies how you navigate to the next component.  For
+example, a path of `'abc.123.def'` refers to the model property at `pek.model['abc'][123]['def']`.
 
-`pek.on()` returns an unsubscriber function.  Simply call this function to remove your listener.
-(We'll be doing this after each of our examples here and below to keep things from getting confusing)
+Pek paths may take the form of a String, where components are '.'-delimited, or
+an Array of component items.  Converting between the two forms is simple:
+`path.split('.')` a path String to get the Array form, and `path.join('.')`
+a path Array to get the String form.
+
+Pek patterns are just like paths, except they may contain "wildcard" or
+"globstar" components.  When matching a path to a pattern, wildcards (`'*'`)
+will match any component at that level.  A globstar (`'**'`) will match all
+components at all levels at or below the level of the globstar.  *Currently
+a pattern may only contain a single globstar*.
+
+Check out the [PathMatch tests](blob/master/src/test.js#L5) for pattern matching
+examples.
+
+### Unsubscribing Listeners
+
+`pek.on()` returns an unsubscriber function.  Invoke this function to remove
+your listener.  (We'll be doing this after each of our examples here and below
+to keep things from getting confusing)
+
 ```javascript --context
 off();
 
@@ -109,24 +142,36 @@ pek.model.appName = 'Pek is still awesome!';
 Got it?  Okay, let's see what else we can do ...
 
 ### Subscribing to Events (Continued)
+
 Listen for `name` changes on any list:
+
 ```javascript --context
 off = pek.on('lists.*.name', console.log);
+
 pek.model.lists[1].name = 'Honey Do';
+
 off();
 ```
-Listen for changes to any property, on any item, in any list:
+
+Listen for changes to anything contained in `lists`:
+
 ```javascript --context
-off = pek.on('lists.*.items.*.*', console.log);
+off = pek.on('lists.**', console.log);
+
 pek.model.lists[1].items[1].name = 'Cook dinner';
 pek.model.lists[0].items[0].done = true;
+
 off();
 ```
-Listen for changes on state before it exists(!):
+
+Listen for changes on yet-to-be-defined paths:
+
 ```javascript --context
 off = pek.on('users.*', console.log);
+
 pek.model.users = [{email: 'ann@example.com'}];
 pek.model.users.push({email: 'bob@example.com'});
+
 off();
 ```
 Subscribe to changes on specific objects:
@@ -138,27 +183,20 @@ pek.model.lists[1].items[0].name = 'Drew';
 
 off();
 ```
-## Pek Paths
-
-Paths in Pek take two forms.  Both forms provide the keys needed to navigate to
-a particular point in the model.  In the string form, these keys are delimited
-with a ".".  The array form is simply the result of calling `split('.')` on the string form.
-
-Path patterns passed to `\Pek.on()` may contain a `*` wildcard for any key, in
-which case the pattern will match paths with any key at that level.  You may
-also pass a model object, in which case Pek will use the current path at which that object resides.
-
-Note: At this time, path keys may not contain a "." character.
 
 ## A Word About Pek Models
 
-As alluded to in the Overview, Pek works by wrapping the model you pass into
-the constructor in ES6 Proxy objects.  What this means is that *you are reading and writing state in that model structure*.
+As alluded to in the Overview, Pek works by taking the model object you pass
+into the constructor and wrapping it in ES6 Proxy objects.  These proxies are how
+Pek intercepts changes to your model. *It's important to note that Pek continues to write to, and
+read from, this model object*.
 
 For example, if we look at our original model, `APP_DATA`, we'll see that it's been getting modified:
+
 ```javascript --context
 console.log(APP_DATA.appName);
 console.log(APP_DATA.users);
 console.log(APP_DATA.lists[1].items[1].name);
 ```
-Note that Pek expects to "own" the model you give it.  Once you've created a Pek model you're free to pass around references to the model and any objects inside of it - Pek will happily emit events as you make changes.  However if you maintain a reference to the original model (outside of Pek) and operate on that, there are some cases where events will not be emitted.
+
+In practical terms, it's best to treat the model structure you provide as being "owned" by Pek.  Once you've created a Pek model you're free to pass around references to the model and any objects inside of it - Pek will happily emit events as changes get made.  However, if you maintain a reference to the original model (outside of Pek) and operate on that, there are some cases where events will not be emitted.

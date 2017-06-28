@@ -10,21 +10,31 @@ describe('PathEmitter', function() {
   }
 
   test([1], [1], true);
-  test(['*'], [1], true);
   test([1, 2, 3], [1, 2, 3], true);
-  test([1, '*', 3], [1, 2, 3], true);
-  test([1, '*', 3, '*', 5], [1, 2, 3, 4, 5], true);
-  test([1, '*', 3, '*', 5], [1, 2, 3, 4, 5], true);
-
-  test([1, '**', 3], [1, 2, 3], true);
-  test([1, '**', 5], [1, 2, 3, 4, 5], true);
-
   test([], [], false);
   test([], [1], false);
   test([1], [], false);
   test([1], [2], false);
   test([1, 2], [1, 2, 3], false);
   test([1, 2, 3], [1, 2], false);
+
+  test(['*'], [1], true);
+  test([1, '*', 3], [1, 2, 3], true);
+  test([1, '*', 3, '*', 5], [1, 2, 3, 4, 5], true);
+  test(['*', '*'], [1], false);
+
+  test(['**'], [1], true);
+  test(['**'], [1, 2, 3], true);
+  test([1, '**', 3], [1, 2, 3], true);
+  test([1, '**', 5], [1, 2, 3, 4, 5], true);
+  test([1, '**'], [1, 2], true);
+
+  test([1, '**'], [1], false);
+  test([2, '**', 5], [1, 2, 3, 4, 5], false);
+  test([1, '**', 6], [1, 2, 3, 4, 5], false);
+
+  test([1, '*', '**', 5], [1, 2, 3, 4, 5], true);
+  test([1, '**', 5, '*'], [1, 2, 3, 4, 5], false);
 });
 
 describe('main test', function() {
@@ -41,8 +51,12 @@ describe('main test', function() {
     model = pek.model;
 
     const calls = [];
-    cb = (...args) => calls.push(args);
-    cb.calledWith = (...args) => assert.deepEqual(args, calls.shift());
+    cb = (...args) => {
+      calls.push(args);
+    };
+    cb.calledWith = (...args) => {
+      assert.deepEqual(args, calls.shift());
+    };
     cb.notCalled = () => assert(calls.length == 0, 'Called more than expected');
 
     pek.reset = function() {
@@ -70,7 +84,7 @@ describe('main test', function() {
     // a value to allow that to happen)
     off();
     model.x = 9;
-    assert.equal(pek.listeners.length, 0);
+    assert.equal(pek._listeners.length, 0);
 
     model.y = 8;
     done();
@@ -128,7 +142,6 @@ describe('main test', function() {
   });
 
   it('Deep proxy', function(done) {
-    debugger;
     const pek = start({
       a: {
         b: {c: 1},
@@ -139,11 +152,11 @@ describe('main test', function() {
     pek.on('*.*.*', cb);
     pek.on('*.*.*.*', cb);
 
-    pek.model.a.b.c = 2
-    cb.calledWith(['a', 'b', 'c'], 2);
+    pek.model.a.b.c = 3
+    cb.calledWith(['a', 'b', 'c'], 3);
 
-    pek.model.a.bb[1].c = 2
-    cb.calledWith(['a', 'bb', '1', 'c'], 2);
+    pek.model.a.bb[1].c = 4
+    cb.calledWith(['a', 'bb', '1', 'c'], 4);
 
     done();
   });

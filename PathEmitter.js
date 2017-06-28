@@ -5,33 +5,24 @@ class PathEmitter {
     return (typeof(path) == 'string') ? path.split('.') : path;
   }
 
-  static pathMatch(pattern, path) {
-    if (!pattern || !pattern.length) return false;
-    // Current algorithm is an "outside-in" approach.  We do head and tail
-    // pattern matches (permitting '*' wildcard).  If/when there's a mismatch in
-    // the middle, we only allow it if it's the globstar ('**')
-    const pathl = path.length, patl = pattern.length;
+  static pathMatch(pattern, path, reverse) {
+    if (!path || !pattern || !pattern.length || !path.length) return false;
 
-    // Head match
-    let headi = 0;
-    while (true) {
-      const pat = pattern[headi];
-      if (headi >= patl-1 || pat != '*' && pat != path[headi]) break;
-      headi++;
+    const patl = pattern.length - 1;
+    const pathl = path.length - 1;
+
+    let i, j;
+    for (i = 0, j = 0; i <= patl && j <= pathl; i++, j++) {
+      const p = pattern[i];
+      // Globstar = skip any middle items, check the tail of the pattern
+      if (p == '**') {
+        j = pathl - (patl - i);
+        continue;
+      }
+      if (p != path[j] && p != '*') return false;
     }
 
-    // Tail match
-    let taili = pathl - 1, pati = patl - 1;
-    while (true) {
-      const pat = pattern[pati];
-      if (taili <= headi || pat != '*' && pat != path[taili]) break;
-      pati--;
-      taili--;
-    }
-
-    const pat = pattern[headi];
-    if (pat == '**') return true;
-    return taili == headi && (pat == path[headi] || pat == '*');
+    return i > patl && j > pathl;
   }
 
   constructor() {
@@ -76,69 +67,4 @@ class PathEmitter {
   }
 }
 
-class Pek extends PathEmitter {
-  constructor(root) {
-    super();
-
-    const emitter = this;
-
-    let proxify;
-    const proxyHandler = {
-      get: function(target, k) {
-        if (k === '$isProxy') return true;
-        if (k === '$path') return this.path;
-        return target[k];
-      },
-
-      set: function(target, k, v) {
-        if (k === '$path') {
-          this.path = v;
-          return true;
-        }
-
-        const path = this.path.concat(k);
-
-        if (v) {
-          if (v.$isProxy) {
-            v.$path = path;
-          } else {
-            // Proxy Arrays and Objects
-            if (Array.isArray(v) || v.constructor === Object) v = proxify(v, path);
-          }
-        }
-
-        target[k] = v;
-
-        emitter.emit(path, v);
-
-        return true;
-      },
-
-      deleteProperty: function(target, k) {
-        const path = this.path.concat(k);
-        emitter.emit(path);
-        delete target[k];
-        return true;
-      }
-    }
-
-    proxify = function(val, path = []) {
-      path = PathEmitter.pathSplit(path);
-
-      if (val && Array.isArray(val)) {
-        for (var i = 0, l = val.length; i < l; i++)
-          val[i] = proxify(val[i], path.concat(i));
-      } else if (val && val.constructor == Object) {
-        for (const k  in val) val[k] = proxify(val[k], path.concat(k));
-      } else {
-        return val;
-      }
-
-      return new Proxy(val, Object.assign({path}, proxyHandler));
-    }
-
-    this.model = proxify(root);
-  }
-}
-
-module.exports = Pek;
+module.exports = PathEmitter;
