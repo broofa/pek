@@ -27,42 +27,58 @@ class PathEmitter {
 
   constructor() {
     this._listeners = [];
+    this._deferred = new Set();
+    this._emitDeferred = () => {
+      const deferred = this._deferred;
+      this._deferred = new Set();
+      for (let listener of deferred) {
+        const [pattern, callback] = listener;
+        callback(pattern);
+      }
+    }
+  }
+
+  _on(debounce, path, callback) {
+    if (path.$isProxy) {
+      path = path.$path.concat('*');
+    } else {
+      path = PathEmitter.pathSplit(path);
+    }
+    const listener = [path, callback];
+    listener._debounce = !!debounce;
+    this._listeners.push(listener);
+
+    // Return a function to unsubscribe
+    return function off() {listener._off = true}
   }
 
   on(...args) {
-    let listeners = [];
-    while (args.length) {
-      let path = args.shift();
-      const callback = args.shift();
+    return this._on(false, ...args);
+  }
 
-      if (path.$isProxy) {
-        path = path.$path.concat('*');
-      } else {
-        path = PathEmitter.pathSplit(path);
-      }
-      const listener = [path, callback];
-      listeners.push(listener);
-      this._listeners.push(listener);
-    }
-
-    // Return a function to unsubscribe
-    return function off() {
-      if (listeners) listeners.forEach(listener => listener[1] = null);
-      listeners = null;
-    }
+  onDebounce(...args) {
+    return this._on(true, ...args);
   }
 
   emit(path, ...args) {
     let j = 0;
-    for (let i = 0; i < this._listeners.length; i++) {
-      const [pattern, callback] = this._listeners[i];
-      if (!callback) continue;
+    for (let listener of this._listeners) {
+      const [pattern, callback] = listener;
+      if (listener._off) continue;
 
-      this._listeners[j++] = this._listeners[i];
+      this._listeners[j++] = listener;
+
       if (PathEmitter.pathMatch(pattern, path)) {
-        callback(path, ...args);
+        const last = pattern[pattern.length - 1];
+        if (listener._debounce) {
+          this._deferred.add(listener);
+          if (!this._deferTimeout) this._deferTimeout = setTimeout(this._emitDeferred, 0);
+        } else {
+          callback(path, ...args);
+        }
       }
     }
+
     this._listeners.length = j;
   }
 }

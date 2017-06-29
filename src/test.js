@@ -58,6 +58,7 @@ describe('main test', function() {
       assert.deepEqual(args, calls.shift());
     };
     cb.notCalled = () => assert(calls.length == 0, 'Called more than expected');
+    cb.calls = calls;
 
     pek.reset = function() {
       pek.listeners = [];
@@ -104,18 +105,7 @@ describe('main test', function() {
     delete pek.model.abc;
     cb.calledWith(['abc']);
 
-    done();
-  });
-
-  it('Proxy behavior', function(done) {
-    const pek = start([]);
-
-    model.$isProxy = false;
-    assert(model.$isProxy, '$isProxy should not be settable');
-
-    assert(!('$isProxy' in model), '$isProxy "in" model');
-
-    assert.deepEqual(Object.keys(model), [], 'Empty model has keys');
+    cb.notCalled();
 
     done();
   });
@@ -138,6 +128,25 @@ describe('main test', function() {
     cb.calledWith(['0'], 10);
     cb.calledWith(['length'], 3);
 
+    setTimeout(()  => {
+      cb.calledWith(['*']);
+      cb.notCalled();
+      done();
+    }, 0);
+
+    done();
+  });
+
+  it('Proxy behavior', function(done) {
+    const pek = start([]);
+
+    model.$isProxy = false;
+    assert(model.$isProxy, '$isProxy should not be settable');
+
+    assert(!('$isProxy' in model), '$isProxy "in" model');
+
+    assert.deepEqual(Object.keys(model), [], 'Empty model has keys');
+
     done();
   });
 
@@ -159,5 +168,16 @@ describe('main test', function() {
     cb.calledWith(['a', 'bb', '1', 'c'], 4);
 
     done();
+  });
+
+  it('Debounce', function(done) {
+    const pek = start([1,5,3,2,4]);
+    pek.onDebounce('**', cb);
+    pek.model.sort();
+    setTimeout(()  => {
+      cb.calledWith(['**']);
+      cb.notCalled();
+      done();
+    }, 0);
   });
 });

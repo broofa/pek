@@ -7,26 +7,24 @@ runmd.onOutputLine = (line, isRunning) => {
 
 ![\Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
 
-An elegant, modern, observable, data model for JavaScript
+An observable data model for JavaScript
 
 ## About
 
 *Pronounced "peek", spelled "\Pek" (no accent, unless you feel like putting on airs).*
 
 Pek is an observable data model similar in spirit to Backbone or Redux, but
-simpler. Much simpler.  Pek models look and behave just like regular
-JavaScript data structures... with one important difference:
+[hopefully] much simpler to understand and work with.  A pek model is, for all
+intents and purposes, a regular JavaScript object (or array) ... with one
+important difference: ***You can listen for changes***.
 
-***Pek models are observable***
-
-Read on for a quick overview of how this works, or check out the [React example](react-example)
+Read on for details, or check out the [React example](react-example)
 
 ### Browser Support
 
-Pek relies on the [ES6 Proxy
-API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) API. Thus, no real attempt has been made to support legacy systems.
-It runs on most modern mobile and desktop JS platforms (latest versions of
-Node/Chrome/Firefox/Safari/Edge, etc.)
+Pek supports most modern desktop and mobile browsers.  However, it relies on the [ES6 Proxy
+  API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
+so legacy platforms are not supported.
 
 ## Getting Started
 ### Install
@@ -39,13 +37,13 @@ Node/Chrome/Firefox/Safari/Edge, etc.)
 
 `const \Pek = require('pek')`
 
-### Create a Pek Model
+### Create a Model
 
 By way of example, let's create a Pek model for a simple todo list app:
 ```javascript --context
 const Pek = require('../index.js');
 
-const APP_DATA = {
+const APP_MODEL = {
   appName: 'Example App',
   lists: [
     {
@@ -66,23 +64,25 @@ const APP_DATA = {
   ]
 };
 
-const pek = new Pek(APP_DATA);
+const pek = new Pek(APP_MODEL);
 
-pek; // RESULT
+const model = pek.model;
 ```
-### Subscribing to Events
+### Subscribe to Events
 
 Once we have our model, `pek`, we can now listen for changes.
 
 For example, let's listen in on the top-level object:
 
 ```javascript --context
-let off = pek.on('appName', (path, val) => console.log(`Changed ${path[0]} to ${val}`));
+let off = pek.on('appName', (path, val) => console.log(`Changed ${path} to ${val}`));
 
-pek.model.appName = 'Pek is awesome!';
+model.appName = 'Pek is awesome!';
+off();
 ```
 
-*See that?!?*  Our listener function was called by simply assigning a value in our model!  The entire model works this way.
+*See that?!?*  Our listener function was called when the model value was set!
+  but   The entire model works this way.
 
 Let's try something a bit fancier - listening for a `name` changes on any
 list:
@@ -90,12 +90,12 @@ list:
 ```javascript --context
 off = pek.on('lists.*.name', console.log);
 
-pek.model.lists[1].name = 'Honey Do';
+model.lists[1].name = 'Honey Do';
 
 off();
 ```
 
-*Cool, right?*  We can listen for property changes anywhere withour model.
+*Cool, right?*  The whole model works this way, so you can listen for changes to any object, any property within your model.  See [More Examples](#more-examples), for more advanced usage patterns.
 
 ### Listener functions
 
@@ -105,6 +105,21 @@ Pek listener's are called with two arguments:
   2. `value` - (any) New value of the property
 
 Going one step further, we can listen for `name` change
+
+### Unsubscribing Listeners
+
+`pek.on()` and `pek.onDebounce()` return an unsubscriber function.  Invoke this function to remove
+your listener.  (We'll be doing this after each of our examples here and below
+to keep things from getting confusing.)
+
+```javascript --context
+off();
+
+model.appName = 'Pek is still awesome!';
+
+// (nothing logged)
+```
+Got it?  Okay, let's see what else we can do ...
 
 ### Pek Paths & Patterns
 
@@ -126,30 +141,14 @@ a pattern may only contain a single globstar*.
 Check out the [PathMatch tests](blob/master/src/test.js#L5) for pattern matching
 examples.
 
-### Unsubscribing Listeners
-
-`pek.on()` returns an unsubscriber function.  Invoke this function to remove
-your listener.  (We'll be doing this after each of our examples here and below
-to keep things from getting confusing)
-
-```javascript --context
-off();
-
-pek.model.appName = 'Pek is still awesome!';
-
-// (nothing logged)
-```
-Got it?  Okay, let's see what else we can do ...
-
-### Subscribing to Events (Continued)
+### More Examples
 
 Listen for `name` changes on any list:
 
 ```javascript --context
 off = pek.on('lists.*.name', console.log);
 
-pek.model.lists[1].name = 'Honey Do';
-
+model.lists[1].name = 'Honey Do';
 off();
 ```
 
@@ -158,29 +157,36 @@ Listen for changes to anything contained in `lists`:
 ```javascript --context
 off = pek.on('lists.**', console.log);
 
-pek.model.lists[1].items[1].name = 'Cook dinner';
-pek.model.lists[0].items[0].done = true;
-
+model.lists[1].items[1].name = 'Cook dinner';
+model.lists[0].items[0].done = true;
 off();
 ```
 
-Listen for changes on yet-to-be-defined paths:
+Listen as arrays are mutated:
+
+```javascript --context
+off = pek.on('lists.*.items.*', console.log)
+model.lists[0].items.push(model.lists[1].items.shift())
+off();
+```
+
+Add subscriber before model state exists:
 
 ```javascript --context
 off = pek.on('users.*', console.log);
 
-pek.model.users = [{email: 'ann@example.com'}];
-pek.model.users.push({email: 'bob@example.com'});
-
+model.users = [{email: 'ann@example.com'}];
+model.users.push({email: 'bob@example.com'});
 off();
 ```
+
 Subscribe to changes on specific objects:
+
 ```javascript --context
-off = pek.on('lists.1.items.0.name', console.log);
+off = pek.on('lists.0.items.0.name', console.log);
 
-pek.model.lists[1].items[1].name = 'Dave';
-pek.model.lists[1].items[0].name = 'Drew';
-
+model.lists[0].items[1].name = 'Dave';
+model.lists[0].items[0].name = 'Drew';
 off();
 ```
 
@@ -191,12 +197,12 @@ into the constructor and wrapping it in ES6 Proxy objects.  These proxies are ho
 Pek intercepts changes to your model. *It's important to note that Pek continues to write to, and
 read from, this model object*.
 
-For example, if we look at our original model, `APP_DATA`, we'll see that it's been getting modified:
+For example, if we look at our original model, `APP_MODEL`, we'll see that it's been getting modified:
 
 ```javascript --context
-console.log(APP_DATA.appName);
-console.log(APP_DATA.users);
-console.log(APP_DATA.lists[1].items[1].name);
+console.log(APP_MODEL.appName);
+console.log(APP_MODEL.users);
+console.log(APP_MODEL.lists[0].items[1].name);
 ```
 
 In practical terms, it's best to treat the model structure you provide as being "owned" by Pek.  Once you've created a Pek model you're free to pass around references to the model and any objects inside of it - Pek will happily emit events as changes get made.  However, if you maintain a reference to the original model (outside of Pek) and operate on that, there are some cases where events will not be emitted.
