@@ -1,72 +1,126 @@
 const assert = require('assert');
-const PathEmitter = require('./PathEmitter');
 
-class Pek extends PathEmitter {
-  constructor(root) {
-    super();
-
-    const emitter = this;
-
-    let proxify;
-    const proxyHandler = {
-      get: function(target, k) {
-        if (k === '$isProxy') return true;
-        if (k === '$path') return this.path;
-        return target[k];
-      },
-
-      set: function(target, k, v) {
-        if (k === '$path') {
-          this.path = v;
-          return true;
-        } else if (k === '$isProxy') {
-          return true;
-        }
-
-        const path = this.path.concat(k);
-
-        if (v) {
-          if (v.$isProxy) {
-            v.$path = path;
-          } else {
-            // Proxy Arrays and Objects
-            if (Array.isArray(v) || v.constructor === Object) v = proxify(v, path);
-          }
-        }
-
-        target[k] = v;
-
-        emitter.emit(path, v);
-
-        return true;
-      },
-
-      deleteProperty: function(target, k) {
-        const path = this.path.concat(k);
-        emitter.emit(path);
-        delete target[k];
-        return true;
-      }
-    }
-
-    proxify = function(val, path = []) {
-      path = PathEmitter.pathSplit(path);
-
-      if (val && Array.isArray(val)) {
-        for (var i = 0, l = val.length; i < l; i++)
-          val[i] = proxify(val[i], path.concat(i));
-      } else if (val && val.constructor && val.constructor.defineProperty) {
-				// The above test should only pass for plain JS objects
-        for (const k  in val) val[k] = proxify(val[k], path.concat(k));
-      } else {
-        return val;
-      }
-
-      return new Proxy(val, Object.assign({path}, proxyHandler));
-    }
-
-    this.model = proxify(root);
-  }
+function canPekify(obj) {
+  return obj && (Array.isArray(obj) || obj && obj.constructor.defineProperty);
 }
 
-module.exports = Pek;
+function pek(obj, parent, key) {
+  assert(canPekify(obj), 'obj must be an Array or Object');
+
+  if (obj.__) return obj;
+
+  const proxyHandler = {
+    top: function() {
+      return parent ? parent.top() : this;
+    },
+
+    clean: null,
+
+    dirty: true,
+
+    dirtied: parent ? parent.dirtied : [],
+
+    listeners: [],
+
+    getPath: function() {
+      return parent ? parent.getPath() + '.' + key : 'top';
+    },
+
+    markClean: function() {
+      if (!this.dirty) return this.clean;
+      let copy;
+      if (Array.isArray(obj)) {
+        copy = [];
+        for (let o of obj) copy.push(o && o.__ ? o.__.markClean() : o);
+      } else if (obj.constructor.defineProperty) {
+        copy = {};
+        for (let k in obj) {
+          const o = obj[k];
+          copy[k] = o && o.__ ? o.__.markClean() : o;
+        }
+      }
+      this.clean = Object.freeze(copy);
+      this.dirty = false;
+
+      return this.clean;
+    },
+
+    markDirty: function() {
+      if (this.dirty) return;
+      const top = this.top();
+      this.dirty = true;
+      if (!this.dirtied.length) setTimeout(top.flush.bind(top), 0);
+      this.dirtied.push(this);
+
+      if (parent) parent.markDirty();
+    },
+
+    flush: function() {
+      const dirtied = Array.apply(null, this.dirtied);
+      this.dirtied.length = 0;
+      for (let pHandler of dirtied) {
+        pHandler.emit(pHandler.markClean());
+      }
+    },
+
+    on: function(callback) {
+      assert(typeof(callback), 'function');
+      const listener = {callback, path: this.getPath()};
+      this.listeners.push(listener);
+      return function off() {listener._off = true}
+    },
+
+    emit: function(...args) {
+      this.listeners = this.listeners.filter(listener => {
+        if (listener._off) return false;
+        listener.callback(...args);
+        return true;
+      });
+    },
+
+    get: function(target, k) {
+      if (k === '__') return this;
+      return target[k];
+    },
+  };
+
+  const proxy = new Proxy(obj, proxyHandler);
+
+  if (Array.isArray(obj)) {
+    for (var i = 0, l = obj.length; i < l; i++) {
+      if (canPekify(obj[i])) obj[i] = pek(obj[i], proxyHandler, i);
+    }
+  } else {
+    // Plain JS object
+    for (const k  in obj) {
+      if (canPekify(obj[k])) obj[k] = pek(obj[k], proxyHandler, k);
+    }
+  }
+
+  // Mark clean so we get a fresh copy of the clean state
+  proxyHandler.markClean();
+
+  // Flesh out proxyHandler after we've proxified all the children, and after
+  // we've created the proxyHandler object.
+  // Adding the mutate methods here, after we've proxified `obj`, avoids marking
+  // stuff as dirty
+
+  proxyHandler.set = function(target, k, v) {
+    if (target[k] !== v) {
+      target[k] = canPekify(v) ? pek(v) : v;
+      this.markDirty();
+    }
+
+    return true;
+  };
+
+  proxyHandler.deleteProperty = function(target, k) {
+    delete target[k];
+    this.markDirty();
+    return true;
+  };
+
+  return proxy;
+}
+
+module.exports = pek;
