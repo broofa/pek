@@ -1,33 +1,92 @@
+`use strict`; // So setting state on a frozen object will throw
+
 const assert = require('assert');
 
-function canPekify(obj) {
+// Proxy traps. See https://goo.gl/4faHVB
+const PROXY_TRAPS = {
+  get: function(target, k) {
+    if (k === '__') return this;
+    return target[k];
+  },
+
+  set: function(target, k, v) {
+    if (target[k] !== v) {
+      target[k] = isProxyable(v) ? proxify(v) : v;
+      this.markDirty();
+    }
+
+    return true;
+  },
+
+  deleteProperty: function(target, k) {
+    delete target[k];
+    this.markDirty();
+
+    return true;
+  },
+};
+
+/**
+ * Check to see if an object can/should be proxied.  Currently we only work with
+ * plain JS objects.
+ *
+ * TODO: Handle other built-in types like Date, Map, Set, other collection
+ * types, and typed arrays
+ */
+function isProxyable(obj) {
   return obj && (Array.isArray(obj) || obj && obj.constructor.defineProperty);
 }
 
-function pek(obj, parent, key) {
-  assert(canPekify(obj), 'obj must be an Array or Object');
+/**
+ * Create a model object proxy that is tracks changes to the object and that
+ * [lazily] emits events when state changes.
+ *
+ * @param obj [Object|Array]
+ * @param _parent (private) Parent container object
+ * @param _key (private) Key on parent container that holds this `obj`
+ *
+ */
+function proxify(obj, _parent, _key) {
+  assert(isProxyable(obj), 'obj must be an Array or Object');
 
   if (obj.__) return obj;
 
   const proxyHandler = {
-    top: function() {
-      return parent ? parent.top() : this;
-    },
-
+    // The "clean" (and immutable!) model state
     clean: null,
 
+    // True if state has changed for this object or any of it's children
     dirty: true,
 
-    dirtied: parent ? parent.dirtied : [],
+    // Cache of all pek proxies that have dirty flag set
+    dirtied: _parent ? _parent.dirtied : [],
 
+    // Yup
     listeners: [],
 
-    getPath: function() {
-      return parent ? parent.getPath() + '.' + key : 'top';
+    /**
+     * Get top-most parent
+     */
+    top: function() {
+      return _parent ? _parent.top() : this;
     },
 
+    /**
+     * Get string that describes path to this object from top parent
+     */
+    getPath: function() {
+      return _parent ? _parent.getPath() + '.' + _key : 'top';
+    },
+
+    // "Clean" this object.  Causes
     markClean: function() {
       if (!this.dirty) return this.clean;
+
+      // Reset dirty bit here, before walking the object members, prevents
+      // infinite recursive loop if there are circular references
+      this.dirty = false;
+
+      // Make a clean copy of the object state
       let copy;
       if (Array.isArray(obj)) {
         copy = [];
@@ -39,30 +98,51 @@ function pek(obj, parent, key) {
           copy[k] = o && o.__ ? o.__.markClean() : o;
         }
       }
+
+      // Make it immutable
       this.clean = Object.freeze(copy);
-      this.dirty = false;
 
       return this.clean;
     },
 
-    markDirty: function() {
-      if (this.dirty) return;
-      const top = this.top();
-      this.dirty = true;
-      if (!this.dirtied.length) setTimeout(top.flush.bind(top), 0);
-      this.dirtied.push(this);
+    /**
+     * Add handler to cache of dirty objects
+     */
+    _cacheDirty: function(handler) {
+      // Schedule a flush()
+      if (!this.dirtied.length) setTimeout(this.flush.bind(this), 0);
 
-      if (parent) parent.markDirty();
+      this.dirtied.push(handler);
     },
 
+    /**
+     * Mark object as having changed state
+     */
+    markDirty: function() {
+      if (this.dirty) return;
+
+      this.dirty = true;
+      this.top()._cacheDirty(this);
+      if (_parent) _parent.markDirty();
+    },
+
+    /**
+     * Flush the queue of dirty objects.  This updates the clean state and
+     * invokes the listeners on the dirty objects
+     */
     flush: function() {
       const dirtied = Array.apply(null, this.dirtied);
       this.dirtied.length = 0;
+
       for (let pHandler of dirtied) {
         pHandler.emit(pHandler.markClean());
       }
     },
 
+    /**
+     * Add a listener callback to be notified when state changes for this object
+     * or any children objects
+     */
     on: function(callback) {
       assert(typeof(callback), 'function');
       const listener = {callback, path: this.getPath()};
@@ -70,6 +150,9 @@ function pek(obj, parent, key) {
       return function off() {listener._off = true}
     },
 
+    /**
+     * Call all listeners
+     */
     emit: function(...args) {
       this.listeners = this.listeners.filter(listener => {
         if (listener._off) return false;
@@ -77,50 +160,29 @@ function pek(obj, parent, key) {
         return true;
       });
     },
-
-    get: function(target, k) {
-      if (k === '__') return this;
-      return target[k];
-    },
   };
 
   const proxy = new Proxy(obj, proxyHandler);
 
+  // Proxy-ify all child state
   if (Array.isArray(obj)) {
     for (var i = 0, l = obj.length; i < l; i++) {
-      if (canPekify(obj[i])) obj[i] = pek(obj[i], proxyHandler, i);
+      if (isProxyable(obj[i])) obj[i] = proxify(obj[i], proxyHandler, i);
     }
   } else {
     // Plain JS object
     for (const k  in obj) {
-      if (canPekify(obj[k])) obj[k] = pek(obj[k], proxyHandler, k);
+      if (isProxyable(obj[k])) obj[k] = proxify(obj[k], proxyHandler, k);
     }
   }
 
-  // Mark clean so we get a fresh copy of the clean state
+  // Capture clean state, reset dirty bit
   proxyHandler.markClean();
 
-  // Flesh out proxyHandler after we've proxified all the children, and after
-  // we've created the proxyHandler object.
-  // Adding the mutate methods here, after we've proxified `obj`, avoids marking
-  // stuff as dirty
-
-  proxyHandler.set = function(target, k, v) {
-    if (target[k] !== v) {
-      target[k] = canPekify(v) ? pek(v) : v;
-      this.markDirty();
-    }
-
-    return true;
-  };
-
-  proxyHandler.deleteProperty = function(target, k) {
-    delete target[k];
-    this.markDirty();
-    return true;
-  };
+  // Assign traps last, to avoid marking things as dirty
+  Object.assign(proxyHandler, PROXY_TRAPS);
 
   return proxy;
 }
 
-module.exports = pek;
+module.exports = proxify;

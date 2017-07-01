@@ -56,7 +56,7 @@ describe('main test', function() {
     })
   });
 
-  it('Deep converts inserted objects', function() {
+  it('Deep proxy-ification', function() {
       return new Promise(resolve => {
         const off = model.__.on(state => {
           off();
@@ -64,10 +64,8 @@ describe('main test', function() {
         });
 
         model.b[2] = {def: ['a', 'b']};
-        assert(model.b[2].def.__);
-        model.b[2].def.__.on(state => {
-          console.log('DEF', state);
-        });
+        assert(model.b[2].def.__, 'Not proxied');
+
         model.b[2].def.unshift('zed');
         assert(model.__.dirty, 'Not dirtied');
       });
