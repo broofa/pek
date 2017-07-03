@@ -1,35 +1,113 @@
 
 ![Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
 
-An observable data model for JavaScript
+JavaScript data structures with immutable state events.
 
-## About
+## Install
 
-*Pronounced "peek", spelled "Pek" (no accent, unless you feel like putting on airs).*
+    npm install pek
 
-P&emacr;k is an observable data model similar in spirit to Backbone or Redux, but
-[hopefully] much simpler to understand and work with.  A pek model is, for all
-intents and purposes, a regular JavaScript object (or array) ... with one
-important difference: ***You can listen for changes***.
+Then:
 
-Read on for details, or check out the [React example](react-example)
+```javascript
+const pek = require('pek');
 
-### Browser Support
+```
 
-P&emacr;k supports most modern desktop and mobile browsers.  However, it relies on the [ES6 Proxy
-  API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
-so legacy platforms are not supported.
+## Quick Start
 
-## Getting Started
-### Install
+Start by using `pek()` to create your application state:
 
-`npm install pek`
+```javascript
+// Data structure can have any schema, as long as it consists of native JS types (String, Number, Object, Array, null)
+const APP_STATE = {
+  name: 'Todo List',
+  lists: [
+    {name: 'Shopping', items: ['Milk', 'Bananas']},
+  ]
+}
 
-`import \pek from 'pek'`
+const model = pek(APP_STATE); // ⇨ { name: 'Todo List', lists: [ { name: 'Shopping', items: [Object] } ] }
 
-... or ...
+```
 
-`const \pek = require('pek')`
+The returned `model` looks and feels just like the original. For example:
+
+```javascript
+model.lists[0].name = 'Zoo Supplies';
+model.lists[0].items.push('Monkeys');
+model.lists[0]; // ⇨ { name: 'Zoo Supplies', items: [ 'Milk', 'Bananas', 'Monkeys' ] }
+
+```
+
+With one small difference - you can subscribe to state changes...
+
+```javascript
+const unsubscribe = model.__.on(state => console.log(state));
+
+model.name = 'Pek Example';
+
+⇒ { name: 'Pek Example',
+⇒   lists: [ { name: 'Zoo Supplies', items: [Object] } ] }
+```
+
+Of even greater interest is that `state` is immutable:
+
+```javascript
+`use strict`;
+model.__.on(state => {
+  try {
+    state.name = 'Monkey Poo';
+  } catch (err) {
+    console.log('FDSAFDSA');
+  }
+});
+
+model.name = 'Pek Example 2';
+
+⇒ { name: 'Pek Example 2',
+⇒   lists: [ { name: 'Zoo Supplies', items: [Object] } ] }
+```
+
+## API
+
+### pek(initialState)
+
+Creates a new P&emacr;k model
+
+* `initialState` - Object or Array holding your initial model state
+* Returns a P&emacr;k model (a Proxy-wrapped version of `initialState`)
+
+E.g.
+
+```javascript
+const model = pek({a: 'hello', b: ['world']}); // ⇨ { a: 'hello', b: [ 'world' ] }
+
+```
+
+### model. ... __.on(callback)
+
+Listen for changes to model state.
+
+* `callback` - Function to call any time the target object *or any of it's
+subordinate objects* changes state.  This function takes the following arguments:
+  * `state` - An *immutable* copy of the object state.  Attempting to modify
+* Returns unsubscriber `Function`.
+
+```javascript
+const unsubscribe = model.__.on(immutableState => console.log(immutableState));
+
+model.a = 'Hello';
+
+⇒ { a: 'Hello', b: [ 'world' ] }
+```
+
+To unsubscribe, call the returned unsubscriber `Function`:
+
+```javascript
+unsubscribe();
+
+```
 
 ----
 Markdown generated from [src/README_js.md](src/README_js.md) by [![RunMD Logo](http://i.imgur.com/h0FVyzU.png)](https://github.com/broofa/runmd)
