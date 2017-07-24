@@ -1,4 +1,4 @@
-const assert = require('assert');
+`use strict`;
 
 class PathEmitter {
   static pathSplit(path) {

@@ -23,49 +23,72 @@ const pek = require('pek');
 
 ## Quick Start
 
-Start by using `pek()` to create your application state:
+To get started, create a data model for your application using the same data
+types as you would with JSON (`String`, `Number`, `Boolean`, `Object`, `Array`, and `null`):
 
 ```javascript --context
-// Data structure can have any schema, as long as it consists of native JS types (String, Number, Object, Array, null)
 const APP_STATE = {
   name: 'Todo List',
   lists: [
     {name: 'Shopping', items: ['Milk', 'Bananas']},
   ]
-}
+};
+```
 
+Next, create a Pek model by passing this data model to `pek()`:
+
+```javascript --context
 const model = pek(APP_STATE); // RESULT
 ```
 
-The returned `model` looks and feels just like the original. For example:
+That's pretty much all there is to it.  Your Pek model looks and feels just like the original:
 
 ```javascript --context
 model.lists[0].name = 'Zoo Supplies';
 model.lists[0].items.push('Monkeys');
+
 model.lists[0]; // RESULT
 ```
 
-With one small difference - you can subscribe to state changes...
+... with one important difference - *you can subscribe to state changes*:
 
-```javascript --context
+```javascript
 const unsubscribe = model.__.on(state => console.log(state));
 
-model.name = 'Pek Example';
+model.name = '\Pek Example';
 ```
 
-Of even greater interest is that `state` is immutable:
+Anytime your Pek model changes, all listeners are notified.  Moreover, the `state` listeners receive is immutable:
 
 ```javascript --context
-`use strict`;
 model.__.on(state => {
+  state.name = 'Nopity nope nope';
+  state.name; // RESULT
+});
+
+model.name = '\Pek Example 2';
+```
+```javascript --context --hide
+model.__.listeners = []; // Clean up
+```
+
+In non-strict mode, changing the state will fail silently, as above.  In strict
+mode, changing the state will throw an exception:
+
+```javascript --context
+model.__.on(state => {
+  'use strict';
   try {
-    state.name = 'Monkey Poo';
+    state.name = 'Nopity nope nope';
   } catch (err) {
-    console.log('FDSAFDSA');
+    console.log(err.message);
   }
 });
 
-model.name = 'Pek Example 2';
+model.name = '\Pek Example 3';
+```
+```javascript --context --hide
+model.__.listeners = []; // Clean up
 ```
 
 ## API
@@ -91,7 +114,7 @@ const model = pek({a: 'hello', b: ['world']}); // RESULT
 Listen for changes to model state.
 
 * `callback` - Function to call any time the target object *or any of it's
-subordinate objects* changes state.  This function takes the following arguments:
+subordinate objects* change state.  This function takes the following arguments:
   * `state` - An *immutable* copy of the object state.  Attempting to modify
 * Returns unsubscriber `Function`.
 

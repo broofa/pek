@@ -1,7 +1,5 @@
 `use strict`; // So setting state on a frozen object will throw
 
-const assert = require('assert');
-
 // Proxy traps. See https://goo.gl/4faHVB
 const PROXY_TRAPS = {
   get: function(target, k) {
@@ -47,7 +45,7 @@ function isProxyable(obj) {
  *
  */
 function proxify(obj, _parent, _key) {
-  assert(isProxyable(obj), 'obj must be an Array or Object');
+  if (!isProxyable(obj)) throw TypeError('obj must be an Array or Object');
 
   if (obj.__) return obj;
 
@@ -144,7 +142,8 @@ function proxify(obj, _parent, _key) {
      * or any children objects
      */
     on: function(callback) {
-      assert(typeof(callback), 'function');
+      if (typeof(callback) != 'function') throw TypeError('callback must be a Function');
+
       const listener = {callback, path: this.getPath()};
       this.listeners.push(listener);
       return function off() {listener._off = true}

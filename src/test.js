@@ -70,4 +70,20 @@ describe('main test', function() {
         assert(model.__.dirty, 'Not dirtied');
       });
   });
+
+  it('Immutable state enforcement', function() {
+    return new Promise(resolve => {
+      const off = model.__.on(state => {
+        'use strict';
+
+        assert.throws(function() {
+          state.xyz = '123';
+        });
+        off();
+        resolve();
+      });
+
+      model.immute = true;
+    });
+  });
 });

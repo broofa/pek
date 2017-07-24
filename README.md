@@ -16,57 +16,72 @@ const pek = require('pek');
 
 ## Quick Start
 
-Start by using `pek()` to create your application state:
+To get started, create a data model for your application using the same data
+types as you would with JSON (`String`, `Number`, `Boolean`, `Object`, `Array`, and `null`):
 
 ```javascript
-// Data structure can have any schema, as long as it consists of native JS types (String, Number, Object, Array, null)
 const APP_STATE = {
   name: 'Todo List',
   lists: [
     {name: 'Shopping', items: ['Milk', 'Bananas']},
   ]
-}
+};
 
+```
+
+Next, create a P&emacr;k model by passing this data model to `pek()`:
+
+```javascript
 const model = pek(APP_STATE); // ⇨ { name: 'Todo List', lists: [ { name: 'Shopping', items: [Object] } ] }
 
 ```
 
-The returned `model` looks and feels just like the original. For example:
+That's pretty much all there is to it.  Your P&emacr;k model looks and feels just like the original:
 
 ```javascript
 model.lists[0].name = 'Zoo Supplies';
 model.lists[0].items.push('Monkeys');
+
 model.lists[0]; // ⇨ { name: 'Zoo Supplies', items: [ 'Milk', 'Bananas', 'Monkeys' ] }
 
 ```
 
-With one small difference - you can subscribe to state changes...
+... with one important difference - *you can subscribe to state changes*:
 
 ```javascript
 const unsubscribe = model.__.on(state => console.log(state));
 
 model.name = 'Pek Example';
-
-⇒ { name: 'Pek Example',
-⇒   lists: [ { name: 'Zoo Supplies', items: [Object] } ] }
 ```
 
-Of even greater interest is that `state` is immutable:
+Anytime your P&emacr;k model changes, all listeners are notified.  Moreover, the `state` listeners receive is immutable:
 
 ```javascript
-`use strict`;
 model.__.on(state => {
+  state.name = 'Nopity nope nope';
+  state.name; // ⇨ 'Pek Example 2'
+});
+
+model.name = '\Pek Example 2';
+
+```
+
+In non-strict mode, changing the state will fail silently, as above.  In strict
+mode, changing the state will throw an exception:
+
+```javascript
+model.__.on(state => {
+  'use strict';
   try {
-    state.name = 'Monkey Poo';
+    state.name = 'Nopity nope nope';
   } catch (err) {
-    console.log('FDSAFDSA');
+    console.log(err.message);
   }
 });
 
-model.name = 'Pek Example 2';
+model.name = '\Pek Example 3';
 
-⇒ { name: 'Pek Example 2',
-⇒   lists: [ { name: 'Zoo Supplies', items: [Object] } ] }
+⇒ Cannot assign to read only property 'name' of object '[object Object]'
 ```
 
 ## API
@@ -90,7 +105,7 @@ const model = pek({a: 'hello', b: ['world']}); // ⇨ { a: 'hello', b: [ 'world'
 Listen for changes to model state.
 
 * `callback` - Function to call any time the target object *or any of it's
-subordinate objects* changes state.  This function takes the following arguments:
+subordinate objects* change state.  This function takes the following arguments:
   * `state` - An *immutable* copy of the object state.  Attempting to modify
 * Returns unsubscriber `Function`.
 
