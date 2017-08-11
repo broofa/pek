@@ -1,29 +1,5 @@
 `use strict`; // So setting state on a frozen object will throw
 
-// Proxy traps. See https://goo.gl/4faHVB
-const PROXY_TRAPS = {
-  get: function(target, k) {
-    if (k === '__') return this;
-    return target[k];
-  },
-
-  set: function(target, k, v) {
-    if (target[k] !== v) {
-      target[k] = isProxyable(v) ? proxify(v) : v;
-      this.markDirty();
-    }
-
-    return true;
-  },
-
-  deleteProperty: function(target, k) {
-    delete target[k];
-    this.markDirty();
-
-    return true;
-  },
-};
-
 /**
  * Check to see if an object can/should be proxied.  Currently we only work with
  * plain JS objects.
@@ -61,6 +37,31 @@ function proxify(obj, _parent, _key) {
 
     // Yup
     listeners: [],
+
+
+    // Proxy traps. See https://goo.gl/4faHVB
+    get: function(target, k) {
+      if (k === '__') return this;
+      return target[k];
+    },
+
+    set: function(target, k, v) {
+      if (target[k] !== v) {
+        target[k] = isProxyable(v) ? proxify(v, proxyHandler, k) : v;
+        this.markDirty();
+      }
+
+      return true;
+    },
+
+    deleteProperty: function(target, k) {
+      delete target[k];
+      this.markDirty();
+
+      return true;
+    },
+
+
 
     /**
      * Get top-most parent
@@ -177,9 +178,6 @@ function proxify(obj, _parent, _key) {
 
   // Capture clean state, reset dirty bit
   proxyHandler.markClean();
-
-  // Assign traps last, to avoid marking things as dirty
-  Object.assign(proxyHandler, PROXY_TRAPS);
 
   return proxy;
 }
