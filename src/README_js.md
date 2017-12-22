@@ -17,7 +17,7 @@ JavaScript data structures with immutable state events.
 
 Then:
 
-```javascript --context
+```javascript --run default
 const pek = require('pek');
 ```
 
@@ -26,7 +26,7 @@ const pek = require('pek');
 To get started, create a data model for your application using the same data
 types as you would with JSON (`String`, `Number`, `Boolean`, `Object`, `Array`, and `null`):
 
-```javascript --context
+```javascript --run default
 const APP_STATE = {
   name: 'Todo List',
   lists: [
@@ -37,13 +37,13 @@ const APP_STATE = {
 
 Next, create a Pek model by passing this data model to `pek()`:
 
-```javascript --context
+```javascript --run default
 const model = pek(APP_STATE); // RESULT
 ```
 
 That's pretty much all there is to it.  Your Pek model looks and feels just like the original:
 
-```javascript --context
+```javascript --run default
 model.lists[0].name = 'Zoo Supplies';
 model.lists[0].items.push('Monkeys');
 
@@ -60,7 +60,7 @@ model.name = '\Pek Example';
 
 Anytime your Pek model changes, all listeners are notified.  Moreover, the `state` listeners receive is immutable:
 
-```javascript --context
+```javascript --run default
 model.__.on(state => {
   state.name = 'Nopity nope nope';
   state.name; // RESULT
@@ -68,14 +68,14 @@ model.__.on(state => {
 
 model.name = '\Pek Example 2';
 ```
-```javascript --context --hide
+```javascript --run default --hide
 model.__.listeners = []; // Clean up
 ```
 
 In non-strict mode, changing the state will fail silently, as above.  In strict
 mode, changing the state will throw an exception:
 
-```javascript --context
+```javascript --run default
 model.__.on(state => {
   'use strict';
   try {
@@ -87,12 +87,12 @@ model.__.on(state => {
 
 model.name = '\Pek Example 3';
 ```
-```javascript --context --hide
+```javascript --run default --hide
 model.__.listeners = []; // Clean up
 ```
 
 ## API
-```javascript --context=api --hide
+```javascript --run api --hide
 const pek = require('pek');
 ```
 
@@ -105,7 +105,7 @@ Creates a new Pek model
 
 E.g.
 
-```javascript --context=api
+```javascript --run api
 const model = pek({a: 'hello', b: ['world']}); // RESULT
 ```
 
@@ -118,7 +118,7 @@ subordinate objects* change state.  This function takes the following arguments:
   * `state` - An *immutable* copy of the object state.  Attempting to modify
 * Returns unsubscriber `Function`.
 
-```javascript --context=api
+```javascript --run api
 const unsubscribe = model.__.on(immutableState => console.log(immutableState));
 
 model.a = 'Hello';
@@ -126,6 +126,6 @@ model.a = 'Hello';
 
 To unsubscribe, call the returned unsubscriber `Function`:
 
-```javascript --context=api
+```javascript --run api
 unsubscribe();
 ```

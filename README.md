@@ -1,3 +1,6 @@
+<!--
+  -- This file is auto-generated from src/README_js.md. Changes should be made there.
+  -->
 
 ![Pek Logo](http://i.imgur.com/4ZQuhmQ.png)
 
