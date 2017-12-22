@@ -15,11 +15,13 @@
   "dependencies": {},
   "devDependencies": {
     "mocha": "3.4.2",
-    "runmd": "1.0.1"
+    "runmd": "1.0.1",
+    "standard-version": "4.2.0"
   },
   "scripts": {
     "md": "runmd --watch --output README.md src/README_js.md",
     "prepare": "runmd src/README_js.md --output README.md",
+    "release": "standard-version",
     "test": "mocha src/test"
   }
 }
