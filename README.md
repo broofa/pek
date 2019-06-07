@@ -35,7 +35,7 @@ const APP_STATE = {
 Next, create a P&emacr;k model by passing this data model to `pek()`:
 
 ```javascript
-const model = pek(APP_STATE); // ⇨ { name: 'Todo List', lists: [ { name: 'Shopping', items: [Object] } ] }
+const model = pek(APP_STATE); // ⇨ { name: 'Todo List', lists: [ { name: 'Shopping', items: [ 'Milk', 'Bananas' ] } ] }
 
 ```
 

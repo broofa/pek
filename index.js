@@ -1,5 +1,70 @@
 `use strict`; // So setting state on a frozen object will throw
 
+class Pek {
+  constructor(mutable) {
+    this.mutable = proxify(mutable, this._onChange.bind(this));
+    this._watchers = new Set;
+  }
+
+  _onChange(currentState, previousState) {
+    for (const [resolver, callback] of this._watchers) {
+      const current = resolver(currentState);
+      const previous = resolver(previousState);
+      if (current !== previous) callback(current, previous, currentState, resolver._string || resolver);
+    }
+  }
+
+  /**
+   * Watch for changes in the model.
+   *
+   * @param {String|Function(root)} resolver Function that takes a top-level
+   *                                state object and returns the property to
+   *                                watch for changes
+   * @param {Function(currentState, previousState, immutable, resolver)} Callback
+   * @return {Function} Function to remove the watcher
+   */
+  watch(resolver, callback) {
+    if (typeof(resolver) == 'string') {
+      const _string = resolver;
+      const path = _string.split('.');
+      resolver = function(root) {
+        let state = root;
+        for (const prop of path) {
+          state = state[prop];
+          if (state == null) return;
+        }
+
+        return state;
+      }
+      resolver._string = _string;
+    }
+
+    const watcher = {statePath, callback};
+    this._watchers.add(watcher);
+    return () => this._watchers.delete(watcher);
+  }
+
+  /**
+   * Stop watching for model state changes
+   *
+   * @param {String | Function} resolver See #watch()
+   * @param {Function} [callback] See #watch.  If omitted, removes all callbacks
+   *                              associated with `resolver`
+   */
+  unwatch(resolver, callback) {
+    for (const watcher of this._watchers) {
+      const [res, cb] = watcher;
+      if ((res === resolver || res._string === res) && (!callback || cb === callback)) {
+        this._watchers.delete(watcher);
+      }
+    }
+  }
+}
+
+module.exports = Pek;
+
+//-------------------------------------
+
 /**
  * Check to see if an object can/should be proxied.  Currently we only work with
  * plain JS objects.
@@ -12,7 +77,7 @@ function isProxyable(obj) {
 }
 
 /**
- * Create a model object proxy that is tracks changes to the object and that
+ * Create a model object proxy that tracks changes to the object and that
  * [lazily] emits events when state changes.
  *
  * @param obj [Object|Array]
@@ -38,7 +103,6 @@ function proxify(obj, _parent, _key) {
     // Yup
     listeners: [],
 
-
     // Proxy traps. See https://goo.gl/4faHVB
     get: function(target, k) {
       if (k === '__') return this;
@@ -60,8 +124,6 @@ function proxify(obj, _parent, _key) {
 
       return true;
     },
-
-
 
     /**
      * Get top-most parent
