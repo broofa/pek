@@ -14,7 +14,6 @@ Then:
 
 ```javascript
 const pek = require('pek');
-
 ```
 
 ## Quick Start
@@ -29,14 +28,16 @@ const APP_STATE = {
     {name: 'Shopping', items: ['Milk', 'Bananas']},
   ]
 };
-
 ```
 
 Next, create a P&emacr;k model by passing this data model to `pek()`:
 
 ```javascript
-const model = pek(APP_STATE); // ⇨ { name: 'Todo List', lists: [ { name: 'Shopping', items: [ 'Milk', 'Bananas' ] } ] }
-
+const model = pek(APP_STATE); // ⇨ 
+  // {
+  //   name: 'Todo List',
+  //   lists: [ { name: 'Shopping', items: [ 'Milk', 'Bananas' ] } ]
+  // }
 ```
 
 That's pretty much all there is to it.  Your P&emacr;k model looks and feels just like the original:
@@ -46,7 +47,6 @@ model.lists[0].name = 'Zoo Supplies';
 model.lists[0].items.push('Monkeys');
 
 model.lists[0]; // ⇨ { name: 'Zoo Supplies', items: [ 'Milk', 'Bananas', 'Monkeys' ] }
-
 ```
 
 ... with one important difference - *you can subscribe to state changes*:
@@ -66,7 +66,6 @@ model.__.on(state => {
 });
 
 model.name = '\Pek Example 2';
-
 ```
 
 In non-strict mode, changing the state will fail silently, as above.  In strict
@@ -83,7 +82,6 @@ model.__.on(state => {
 });
 
 model.name = '\Pek Example 3';
-
 ⇒ Cannot assign to read only property 'name' of object '[object Object]'
 ```
 
@@ -100,7 +98,6 @@ E.g.
 
 ```javascript
 const model = pek({a: 'hello', b: ['world']}); // ⇨ { a: 'hello', b: [ 'world' ] }
-
 ```
 
 ### model. ... __.on(callback)
@@ -116,7 +113,6 @@ subordinate objects* change state.  This function takes the following arguments:
 const unsubscribe = model.__.on(immutableState => console.log(immutableState));
 
 model.a = 'Hello';
-
 ⇒ { a: 'Hello', b: [ 'world' ] }
 ```
 
@@ -124,7 +120,6 @@ To unsubscribe, call the returned unsubscriber `Function`:
 
 ```javascript
 unsubscribe();
-
 ```
 
 ----

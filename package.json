@@ -14,9 +14,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "mocha": "6.1.4",
-    "runmd": "1.2.1",
-    "standard-version": "6.0.1"
+    "mocha": "9.1.3",
+    "runmd": "1.3.2",
+    "standard-version": "9.3.2"
   },
   "scripts": {
     "md": "runmd --watch --output README.md src/README_js.md",
